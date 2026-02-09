@@ -1,79 +1,126 @@
 ﻿# 📊 Monitoramento de Mercado - COT Report (CFTC)
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
-[![Status](https://img.shields.io/badge/Status-Concluído-success?style=for-the-badge)]()
+[![Status](https://img.shields.io/badge/Status-Desenvolvimento-yellow?style=for-the-badge)]()
 
-> **Link do Dashboard Online:** [Acesse aqui](https://dashboard-mercado-cftc.streamlit.app)
+🔗 **Dashboard Online:**  
+https://dashboard-mercado-cftc.streamlit.app  
+
+---
 
 ## 📝 Sobre o Projeto
 
-Este projeto é uma solução completa de **Engenharia de Dados** e **Business Intelligence** para monitoramento do mercado financeiro.
+Projeto de Engenharia de Dados aplicado ao mercado financeiro, com foco na análise do relatório **Commitments of Traders (COT)**, publicado pela **CFTC (Commodity Futures Trading Commission)**.
 
-O sistema coleta automaticamente dados do relatório **Commitments of Traders (COT)** da CFTC (Commodity Futures Trading Commission), processa as informações sobre posições de grandes players (Comprados vs. Vendidos) e apresenta os dados em um dashboard interativo.
+A aplicação realiza a coleta automatizada dos dados oficiais, processa as posições de grandes participantes do mercado (Long vs Short) e disponibiliza as informações em um dashboard interativo para análise de sentimento.
 
-### 🎯 Objetivo
-Facilitar a análise de sentimento do mercado (Otimista/Pessimista) para ativos futuros, permitindo uma visualização rápida do posicionamento institucional.
+---
+
+## 🎯 Objetivo
+
+Transformar dados brutos do COT em informações estruturadas e visualmente acessíveis, permitindo:
+
+- Análise rápida de posicionamento institucional  
+- Identificação de viés otimista ou pessimista  
+- Acompanhamento histórico de posições compradas e vendidas  
 
 ---
 
 ## ⚙️ Arquitetura e Funcionalidades
 
-1.  **ETL (Extração, Transformação e Carga):**
-    * Script Python (src/etl_pipeline.py) que conecta na fonte de dados da CFTC.
-    * Limpeza e tratamento com **Pandas**.
-    * Geração automática de base histórica (dados_dashboard.csv).
+### 🔹 Pipeline de Dados (ETL)
 
-2.  **Visualização (Frontend):**
-    * Dashboard interativo com **Streamlit**.
-    * Gráficos dinâmicos com **Plotly**.
-    * Filtros de Data e Ativos.
-    * Indicadores de Sentimento automáticos (Long vs Short).
+- Conexão automática com a fonte oficial da CFTC  
+- Tratamento e padronização com Pandas  
+- Consolidação da base histórica  
+- Geração do arquivo `dados_dashboard.csv`  
 
-3.  **Automação e DevOps:**
-    * Script Batch (.bat) para execução agendada no Windows.
-    * Deploy contínuo (CI/CD) no **Streamlit Cloud**.
+Arquivo principal:
+```
+src/etl_pipeline.py
+```
+
+---
+
+### 🔹 Dashboard Interativo
+
+- Interface construída com Streamlit  
+- Gráficos dinâmicos com Plotly  
+- Filtros por ativo e período  
+- Indicadores automáticos de posição líquida  
+
+Arquivo principal:
+```
+src/dashboard.py
+```
+
+---
+
+### 🔹 Automação
+
+- Execução agendada via script `.bat` no Windows  
+- Atualização recorrente da base de dados  
+- Deploy contínuo no Streamlit Cloud  
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-* **Linguagem:** Python 3.12+
-* **Libs:** Pandas, Streamlit, Plotly Express, Requests
-* **Automação:** Windows Batch Script, Git
-* **Cloud:** Streamlit Community Cloud
+**Linguagem**  
+- Python 3.12+
+
+**Bibliotecas**  
+- Pandas  
+- Requests  
+- Streamlit  
+- Plotly Express  
+
+**Automação e Versionamento**  
+- Git  
+- Windows Task Scheduler  
+
+**Cloud**  
+- Streamlit Community Cloud  
 
 ---
 
 ## 🚀 Como Executar Localmente
 
-1.  **Clone o repositório:**
-    `ash
-    git clone [https://github.com/Carlos-Henrique-Junior/monitoramento-cftc.git](https://github.com/Carlos-Henrique-Junior/monitoramento-cftc.git)
-    `
+### 1. Clone o repositório
 
-2.  **Instale as dependências:**
-    `ash
-    pip install -r requirements.txt
-    `
+```bash
+git clone https://github.com/Carlos-Henrique-Junior/monitoramento-cftc.git
+cd monitoramento-cftc
+```
 
-3.  **Execute o ETL (Baixar dados):**
-    `ash
-    python src/etl_pipeline.py
-    `
+### 2. Instale as dependências
 
-4.  **Inicie o Dashboard:**
-    `ash
-    streamlit run src/dashboard.py
-    `
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Execute o pipeline de dados
+
+```bash
+python src/etl_pipeline.py
+```
+
+### 4. Inicie o dashboard
+
+```bash
+streamlit run src/dashboard.py
+```
 
 ---
 
 ## 👨‍💻 Autor
 
-**Carlos Henrique**
-* [LinkedIn](https://www.linkedin.com/in/carloshenrique-dados/) | [GitHub](https://github.com/Carlos-Henrique-Junior)
+**Carlos Henrique**  
+LinkedIn: https://www.linkedin.com/in/carloshenrique-dados/  
+GitHub: https://github.com/Carlos-Henrique-Junior  
 
 ---
-*Desenvolvido com 💙 e Python.*
+
+Projeto desenvolvido como demonstração prática de pipeline de dados e visualização aplicada ao mercado financeiro.
