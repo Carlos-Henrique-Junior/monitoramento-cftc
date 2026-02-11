@@ -1,21 +1,17 @@
 ﻿# 📊 Monitoramento de Mercado - COT Report (CFTC)
 
-![Python](https://img.shields.io/badge/Python-3.12-blue)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red)
-![Pandas](https://img.shields.io/badge/Pandas-Data%20Processing-grey)
-![Data Analysis](https://img.shields.io/badge/Data%20Analysis-Analytics-purple)
-![Status](https://img.shields.io/badge/Status-Desenvolvimento-yellow)
+**Python | Streamlit | Pandas | Data Analysis | Status: Em Desenvolvimento**
 
 🔗 **Dashboard Online:**  
-https://dashboard-mercado-cftc.streamlit.app
+https://carlos-henrique-junior-monitoramento-cftc-srcdashboard-vkog1v.streamlit.app
 
 ---
 
 # 📈 Market Intelligence Suite - COT Report (CFTC)
 
-> **Monitoramento de Smart Money e Posicionamento Institucional**
+Monitoramento de Smart Money e Posicionamento Institucional
 
-Este projeto é uma solução completa de **Engenharia e Análise de Dados** que extrai, processa e visualiza os dados do relatório *Commitments of Traders (COT)* da CFTC.
+Este projeto é uma solução completa de Engenharia e Análise de Dados que extrai, processa e visualiza os dados do relatório **Commitments of Traders (COT)** da CFTC.
 
 O objetivo é identificar tendências de mercado com base no posicionamento de grandes fundos e especuladores institucionais.
 
@@ -23,7 +19,7 @@ A aplicação implementa um pipeline estruturado com persistência histórica e 
 
 ---
 
-## 🏗️ Arquitetura da Solução
+# 🏗️ Arquitetura da Solução
 
 O projeto segue o fluxo:
 
@@ -36,27 +32,29 @@ graph LR
     C -->|Consulta| D{"🔌 API FastAPI"}
     D -->|Consumo| E["📊 Dashboard Streamlit"]
     C -->|Consumo| F["📈 Power BI / Excel"]
+```
+
 ---
 
 # 🚀 Funcionalidades
 
 ## 1️⃣ Engenharia de Dados (ETL)
 
-- **Extração Automática**  
-  Download do histórico anual direto da CFTC (arquivos ZIP).
+### 🔹 Extração Automática  
+Download do histórico anual direto da CFTC (arquivos ZIP).
 
-- **Limpeza e Tratamento**
-  - Ajuste de datas  
-  - Padronização de tipagem  
-  - Remoção de nulos  
+### 🔹 Limpeza e Tratamento
+- Ajuste de datas  
+- Padronização de tipagem  
+- Remoção de nulos  
 
-- **Cálculo de Métricas**
-  ```
-  Net Position = Long - Short
-  ```
+### 🔹 Cálculo de Métricas
+```
+Net Position = Long - Short
+```
 
-- **Persistência**
-  Armazenamento em SQL Server via Docker.
+### 🔹 Persistência
+Armazenamento em SQL Server via Docker.
 
 ---
 
@@ -104,7 +102,7 @@ graph LR
 ## 1️⃣ Instalação
 
 ```bash
-git clone https://github.com/SEU-USUARIO/monitoramento-cftc.git
+git clone https://github.com/Carlos-Henrique-Junior/monitoramento-cftc.git
 cd monitoramento-cftc
 pip install -r requirements.txt
 ```
@@ -171,7 +169,13 @@ http://127.0.0.1:8000/docs
 
 **Carlos Henrique**
 
-LinkedIn: https://www.linkedin.com/in/carlos-henrique-junior/  
-GitHub: https://github.com/Carlos-Henrique-Junior  
+LinkedIn:  
+https://www.linkedin.com/in/carlos-henrique-junior/
+
+GitHub:  
+https://github.com/Carlos-Henrique-Junior
+
+Portfolio:
+https://carlos-henrique-junior.github.io
 
 Projeto desenvolvido como demonstração prática de pipeline de dados e visualização aplicada ao mercado financeiro.
