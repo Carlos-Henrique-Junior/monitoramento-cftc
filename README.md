@@ -1,126 +1,179 @@
 ﻿# 📊 Monitoramento de Mercado - COT Report (CFTC)
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
-[![Status](https://img.shields.io/badge/Status-Desenvolvimento-yellow?style=for-the-badge)]()
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Processing-grey)
+![Data Analysis](https://img.shields.io/badge/Data%20Analysis-Analytics-purple)
+![Status](https://img.shields.io/badge/Status-Desenvolvimento-yellow)
 
 🔗 **Dashboard Online:**  
-https://dashboard-mercado-cftc.streamlit.app  
+https://dashboard-mercado-cftc.streamlit.app
 
 ---
 
-## 📝 Sobre o Projeto
+# 📈 Market Intelligence Suite - COT Report (CFTC)
 
-Projeto de Engenharia de Dados aplicado ao mercado financeiro, com foco na análise do relatório **Commitments of Traders (COT)**, publicado pela **CFTC (Commodity Futures Trading Commission)**.
+> **Monitoramento de Smart Money e Posicionamento Institucional**
 
-A aplicação realiza a coleta automatizada dos dados oficiais, processa as posições de grandes participantes do mercado (Long vs Short) e disponibiliza as informações em um dashboard interativo para análise de sentimento.
+Este projeto é uma solução completa de **Engenharia e Análise de Dados** que extrai, processa e visualiza os dados do relatório *Commitments of Traders (COT)* da CFTC.
 
----
+O objetivo é identificar tendências de mercado com base no posicionamento de grandes fundos e especuladores institucionais.
 
-## 🎯 Objetivo
-
-Transformar dados brutos do COT em informações estruturadas e visualmente acessíveis, permitindo:
-
-- Análise rápida de posicionamento institucional  
-- Identificação de viés otimista ou pessimista  
-- Acompanhamento histórico de posições compradas e vendidas  
+A aplicação implementa um pipeline estruturado com persistência histórica e análise estatística aplicada para suporte à tomada de decisão.
 
 ---
 
-## ⚙️ Arquitetura e Funcionalidades
+## 🏗️ Arquitetura da Solução
 
-### 🔹 Pipeline de Dados (ETL)
+O projeto segue o fluxo:
 
-- Conexão automática com a fonte oficial da CFTC  
-- Tratamento e padronização com Pandas  
-- Consolidação da base histórica  
-- Geração do arquivo `dados_dashboard.csv`  
+**ETL → Data Warehouse → API → Analytics**
 
-Arquivo principal:
-```
-src/etl_pipeline.py
+```mermaid
+graph LR
+    A[🌎 Fonte: CFTC.gov] -->|Extração & Tratamento (Python)| B(⚙️ ETL Pipeline)
+    B -->|Persistência| C[(🗄️ SQL Server / Docker)]
+    C -->|Consulta| D{🔌 API FastAPI}
+    D -->|Consumo| E[📊 Dashboard Streamlit]
+    C -->|Consumo| F[📈 Power BI / Excel]
 ```
 
 ---
 
-### 🔹 Dashboard Interativo
+# 🚀 Funcionalidades
 
-- Interface construída com Streamlit  
-- Gráficos dinâmicos com Plotly  
-- Filtros por ativo e período  
-- Indicadores automáticos de posição líquida  
+## 1️⃣ Engenharia de Dados (ETL)
 
-Arquivo principal:
-```
-src/dashboard.py
-```
+- **Extração Automática**  
+  Download do histórico anual direto da CFTC (arquivos ZIP).
+
+- **Limpeza e Tratamento**
+  - Ajuste de datas  
+  - Padronização de tipagem  
+  - Remoção de nulos  
+
+- **Cálculo de Métricas**
+  ```
+  Net Position = Long - Short
+  ```
+
+- **Persistência**
+  Armazenamento em SQL Server via Docker.
 
 ---
 
-### 🔹 Automação
+## 2️⃣ Dashboard Interativo (Streamlit)
 
-- Execução agendada via script `.bat` no Windows  
-- Atualização recorrente da base de dados  
-- Deploy contínuo no Streamlit Cloud  
+- KPIs de tendência  
+- Sentimento de mercado (Bullish / Bearish)  
+- Evolução histórica  
+- Média, Mediana, Desvio padrão e Correlação  
+- Gráficos de linha  
+- Histogramas  
+- Scatter plots  
+- Filtros por Ativo, Exchange e Data  
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 3️⃣ API Backend (FastAPI)
 
-**Linguagem**  
-- Python 3.12+
+- Endpoints REST  
+- Documentação automática (Swagger UI)  
+- Integração com outros sistemas  
 
-**Bibliotecas**  
-- Pandas  
-- Requests  
-- Streamlit  
-- Plotly Express  
+---
 
-**Automação e Versionamento**  
+# 🛠️ Tech Stack
+
+- **Linguagem:** Python 3.12+  
+- **Banco de Dados:** SQL Server (Docker)  
+- **Backend:** FastAPI, Uvicorn  
+- **Frontend:** Streamlit, Plotly  
+- **Bibliotecas:** Pandas, SQLAlchemy, Requests, PyODBC  
+
+---
+
+# ⚙️ Como Executar o Projeto
+
+## ✅ Pré-requisitos
+
+- Python 3.x  
+- Docker Desktop  
 - Git  
-- Windows Task Scheduler  
-
-**Cloud**  
-- Streamlit Community Cloud  
 
 ---
 
-## 🚀 Como Executar Localmente
-
-### 1. Clone o repositório
+## 1️⃣ Instalação
 
 ```bash
-git clone https://github.com/Carlos-Henrique-Junior/monitoramento-cftc.git
+git clone https://github.com/SEU-USUARIO/monitoramento-cftc.git
 cd monitoramento-cftc
-```
-
-### 2. Instale as dependências
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Execute o pipeline de dados
+---
+
+## 2️⃣ Subindo o SQL Server (Docker)
+
+```bash
+docker run -e "ACCEPT_EULA=Y" \
+-e "MSSQL_SA_PASSWORD=SuaSenhaForte!123" \
+-p 1433:1433 \
+-d mcr.microsoft.com/mssql/server:2022-latest
+```
+
+---
+
+## 3️⃣ Executando o Pipeline
+
+### ▶️ Rodar ETL
 
 ```bash
 python src/etl_pipeline.py
+python src/banco_dados.py
 ```
 
-### 4. Inicie o dashboard
+### ▶️ Iniciar Dashboard
 
 ```bash
 streamlit run src/dashboard.py
 ```
 
+### ▶️ (Opcional) Iniciar API
+
+```bash
+uvicorn src.api:app --reload
+```
+
+Documentação da API:
+
+```
+http://127.0.0.1:8000/docs
+```
+
 ---
 
-## 👨‍💻 Autor
+# 📊 Estrutura do Projeto
 
-**Carlos Henrique**  
-LinkedIn: https://www.linkedin.com/in/carloshenrique-dados/  
+```
+📦 monitoramento-cftc
+ ┣ 📂 src
+ ┃ ┣ 📜 etl_pipeline.py
+ ┃ ┣ 📜 dashboard.py
+ ┃ ┣ 📜 banco_dados.py
+ ┃ ┗ 📜 api.py
+ ┣ 📜 dados_dashboard.csv
+ ┣ 📜 requirements.txt
+ ┗ 📜 README.md
+```
+
+---
+
+# 👨‍💻 Autor
+
+**Carlos Henrique**
+
+LinkedIn: https://www.linkedin.com/in/carlos-henrique-junior/  
 GitHub: https://github.com/Carlos-Henrique-Junior  
-
----
 
 Projeto desenvolvido como demonstração prática de pipeline de dados e visualização aplicada ao mercado financeiro.

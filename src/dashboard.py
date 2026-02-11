@@ -4,158 +4,144 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 
-# Configuração da página
-st.set_page_config(page_title='Monitoramento CFTC Pro', layout='wide')
+# Configuração da página (Layout Wide)
+st.set_page_config(page_title='Analytic Suite - CFTC', layout='wide')
 
-# --- FUNÇÃO DE CARREGAMENTO E TRATAMENTO ---
+# --- CARREGAMENTO E ENRIQUECIMENTO DE DADOS ---
 @st.cache_data
 def load_data():
     if os.path.exists('dados_dashboard.csv'):
-        # Lê o arquivo
         df = pd.read_csv('dados_dashboard.csv')
         
-        # Converte a coluna de data para o formato correto
+        # Tratamento de Tipos
         df['data_referencia'] = pd.to_datetime(df['data_referencia'], errors='coerce')
-        
-        # Garante que os números sejam inteiros
         df['Comprados'] = pd.to_numeric(df['Comprados'], errors='coerce').fillna(0).astype(int)
         df['Vendidos'] = pd.to_numeric(df['Vendidos'], errors='coerce').fillna(0).astype(int)
         
-        # --- ENGENHARIA DE DADOS ---
-        # 1. Saldo Líquido (Net Position)
+        # Feature Engineering (Criação de Colunas)
         df['Saldo_Liquido'] = df['Comprados'] - df['Vendidos']
+        df['Sentimento'] = df['Saldo_Liquido'].apply(lambda x: 'Bullish' if x > 0 else 'Bearish')
         
-        # 2. Definição do Sentimento
-        df['Sentimento'] = df['Saldo_Liquido'].apply(lambda x: 'Bullish (Otimista)' if x > 0 else 'Bearish (Pessimista)')
+        # --- ENRIQUECIMENTO (Extração de Código/Texto) ---
+        # Exemplo: "S&P 500 - CHICAGO MERCANTILE EXCHANGE" -> Extrair a Bolsa
+        # Vamos dividir a string pelo traço " - "
+        split_data = df['nome_ativo'].str.rsplit(' - ', n=1, expand=True)
         
+        # Se a divisão funcionar, pega a parte 0 como Ativo e a 1 como Bolsa
+        if split_data.shape[1] > 1:
+            df['Ativo_Limpo'] = split_data[0]
+            df['Bolsa_Origem'] = split_data[1]
+        else:
+            df['Ativo_Limpo'] = df['nome_ativo']
+            df['Bolsa_Origem'] = 'OUTROS'
+            
         return df.sort_values(by='data_referencia')
     return pd.DataFrame()
 
-# --- INTERFACE PRINCIPAL ---
-st.title('📈 Intelligence Dashboard - COT Report')
-st.info("ℹ️ **Nota:** Os dados do COT são divulgados pela CFTC sempre às sextas-feiras, referentes à terça-feira anterior.")
-st.markdown('---')
-
 df = load_data()
 
+# --- SIDEBAR (NAVEGAÇÃO E FILTROS) ---
+st.sidebar.title("🧭 Navegação")
+pagina = st.sidebar.radio("Ir para:", ["📊 Dashboard Executivo", "🧪 Laboratório Estatístico"])
+
+st.sidebar.markdown("---")
+st.sidebar.header("🔍 Filtros Globais")
+
 if not df.empty:
-    # --- BARRA LATERAL (FILTROS) ---
-    st.sidebar.header('🔍 Filtros de Análise')
+    # Filtro 1: Bolsa (Enriquecido via tratamento de texto)
+    lista_bolsas = ['TODAS'] + sorted(df['Bolsa_Origem'].dropna().unique().tolist())
+    bolsa_selecionada = st.sidebar.selectbox('Filtrar por Bolsa (Exchange):', lista_bolsas)
     
-    # 1. Filtro de Ativo
-    lista_ativos = sorted(df['nome_ativo'].unique())
+    # Aplica filtro de Bolsa
+    if bolsa_selecionada != 'TODAS':
+        df_filtered = df[df['Bolsa_Origem'] == bolsa_selecionada]
+    else:
+        df_filtered = df
+
+    # Filtro 2: Ativo
+    lista_ativos = sorted(df_filtered['Ativo_Limpo'].unique())
     ativo_selecionado = st.sidebar.selectbox('Selecione o Ativo:', lista_ativos)
     
-    # Filtra o dataframe pelo ativo (Histórico completo deste ativo)
-    df_ativo_full = df[df['nome_ativo'] == ativo_selecionado].sort_values(by='data_referencia')
-    
-    # 2. Filtro de Data (VOLTOU! 🔙)
-    # Pega as datas disponíveis para esse ativo, da mais recente para a mais antiga
-    datas_disponiveis = df_ativo_full['data_referencia'].sort_values(ascending=False).unique()
-    
-    data_selecionada = st.sidebar.selectbox(
-        'Escolha a Data de Referência:',
-        datas_disponiveis,
-        format_func=lambda x: x.strftime('%d/%m/%Y')
-    )
-    
-    # --- LÓGICA DE FILTRAGEM ---
-    # Encontra a linha exata da data selecionada
-    dados_selecionados = df_ativo_full[df_ativo_full['data_referencia'] == data_selecionada]
-
-    if not dados_selecionados.empty:
-        # Pega os dados da data escolhida
-        dado_atual = dados_selecionados.iloc[0]
-        
-        # Tenta pegar a semana anterior (comparado à data selecionada) para o Delta
-        # Acha o índice da data atual e tenta pegar o anterior
-        idx_atual = df_ativo_full[df_ativo_full['data_referencia'] == data_selecionada].index[0]
-        # Pega o histórico até essa data para achar o anterior
-        historico_anterior = df_ativo_full[df_ativo_full['data_referencia'] < data_selecionada]
-        
-        if not historico_anterior.empty:
-            dado_anterior = historico_anterior.iloc[-1]
-            delta_net = int(dado_atual['Saldo_Liquido'] - dado_anterior['Saldo_Liquido'])
-        else:
-            delta_net = 0
-
-        # --- KPI CARDS (Baseados na DATA SELECIONADA) ---
-        c1, c2, c3, c4 = st.columns(4)
-        
-        with c1:
-            st.metric("📅 Data Analisada", dado_atual['data_referencia'].strftime('%d/%m/%Y'))
-        with c2:
-            st.metric("💰 Posição Líquida (Net)", f"{int(dado_atual['Saldo_Liquido']):,}", delta=f"{delta_net:,} contratos")
-        with c3:
-            st.metric("🟢 Comprados (Long)", f"{int(dado_atual['Comprados']):,}")
-        with c4:
-            cor_texto = "green" if dado_atual['Saldo_Liquido'] > 0 else "red"
-            st.markdown(f"**Sentimento na Data:**")
-            st.markdown(f":{cor_texto}[**{dado_atual['Sentimento']}**]")
-
-        # --- GRÁFICO 1: EVOLUÇÃO HISTÓRICA ---
-        st.markdown('### ⏳ Tendência (Histórico Completo)')
-        
-        fig_evolucao = go.Figure()
-        
-        # Linha de tendência
-        fig_evolucao.add_trace(go.Scatter(
-            x=df_ativo_full['data_referencia'], 
-            y=df_ativo_full['Saldo_Liquido'],
-            mode='lines',
-            name='Saldo Líquido',
-            line=dict(color='#3366CC', width=3)
-        ))
-        
-        # Bolinha marcando a data selecionada
-        fig_evolucao.add_trace(go.Scatter(
-            x=[dado_atual['data_referencia']],
-            y=[dado_atual['Saldo_Liquido']],
-            mode='markers',
-            name='Data Selecionada',
-            marker=dict(color='red', size=12, symbol='circle-open-dot')
-        ))
-        
-        fig_evolucao.update_layout(
-            title=f'Linha do Tempo: {ativo_selecionado}',
-            xaxis_title='Data',
-            yaxis_title='Saldo de Contratos',
-            template='plotly_dark',
-            height=400
-        )
-        st.plotly_chart(fig_evolucao, use_container_width=True)
-
-        # --- GRÁFICO 2: BARRA (DA DATA SELECIONADA) ---
-        st.markdown('### ⚔️ Batalha: Comprados vs Vendidos (Nesta Data)')
-        
-        # Prepara dataframe só para o gráfico de barras
-        df_chart = pd.DataFrame([
-            {'Tipo': 'Comprados', 'Contratos': dado_atual['Comprados']},
-            {'Tipo': 'Vendidos', 'Contratos': dado_atual['Vendidos']}
-        ])
-        
-        fig_comp = px.bar(
-            df_chart, 
-            x='Contratos', 
-            y='Tipo',
-            orientation='h',
-            color='Tipo',
-            color_discrete_map={'Comprados': '#00C805', 'Vendidos': '#FF0000'},
-            text='Contratos'
-        )
-        fig_comp.update_layout(template='plotly_dark', height=300)
-        st.plotly_chart(fig_comp, use_container_width=True)
-
-        # --- TABELA DE DADOS ---
-        with st.expander("📂 Ver Histórico Completo em Tabela"):
-            st.dataframe(
-                df_ativo_full[['data_referencia', 'nome_ativo', 'Comprados', 'Vendidos', 'Saldo_Liquido', 'Sentimento']]
-                .sort_values(by='data_referencia', ascending=False)
-                .style.format({'Comprados': '{:,}', 'Vendidos': '{:,}', 'Saldo_Liquido': '{:,}'})
-            )
-            
-    else:
-        st.warning("⚠️ Dados não encontrados para esta data.")
-
+    # DataFrame Final do Ativo
+    df_ativo = df[df['Ativo_Limpo'] == ativo_selecionado].sort_values(by='data_referencia')
 else:
-    st.error("⚠️ Arquivo de dados não encontrado. Rode o ETL primeiro.")
+    st.error("Sem dados carregados.")
+    st.stop()
+
+# --- PÁGINA 1: DASHBOARD EXECUTIVO (O que já tínhamos) ---
+if pagina == "📊 Dashboard Executivo":
+    st.title(f"📈 Monitoramento: {ativo_selecionado}")
+    st.caption(f"Bolsa de Origem: {df_ativo['Bolsa_Origem'].iloc[0] if not df_ativo.empty else 'N/A'}")
+    
+    if not df_ativo.empty:
+        # Pega dado mais recente
+        ultimo = df_ativo.iloc[-1]
+        
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Data", ultimo['data_referencia'].strftime('%d/%m/%Y'))
+        c1.metric("Posição Líquida", f"{ultimo['Saldo_Liquido']:,}")
+        c2.metric("Comprados (Long)", f"{ultimo['Comprados']:,}")
+        c3.metric("Vendidos (Short)", f"{ultimo['Vendidos']:,}")
+        
+        status_color = "green" if ultimo['Saldo_Liquido'] > 0 else "red"
+        c4.markdown(f"### :{status_color}[{ultimo['Sentimento']}]")
+        
+        # Gráfico de Tendência
+        st.subheader("Tendência de Saldo Líquido (Net Position)")
+        fig_trend = px.line(df_ativo, x='data_referencia', y='Saldo_Liquido', markers=True)
+        fig_trend.update_traces(line_color='#3366CC', line_width=3)
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+# --- PÁGINA 2: LABORATÓRIO ESTATÍSTICO (NOVO!) ---
+elif pagina == "🧪 Laboratório Estatístico":
+    st.title(f"🔬 Análise Avançada: {ativo_selecionado}")
+    
+    if not df_ativo.empty:
+        # 1. TABELA DE ESTATÍSTICA DESCRITIVA
+        st.subheader("1. Estatística Descritiva (Ano 2026)")
+        
+        # Cálculo manual das métricas
+        stats_df = df_ativo[['Comprados', 'Vendidos', 'Saldo_Liquido']].describe().T
+        stats_df['Mediana'] = df_ativo[['Comprados', 'Vendidos', 'Saldo_Liquido']].median()
+        stats_df['Moda'] = df_ativo[['Comprados', 'Vendidos', 'Saldo_Liquido']].mode().iloc[0]
+        stats_df['Desvio Padrão'] = df_ativo[['Comprados', 'Vendidos', 'Saldo_Liquido']].std()
+        
+        st.dataframe(stats_df[['mean', 'Mediana', 'Moda', 'Desvio Padrão', 'min', 'max']].style.format("{:.1f}"))
+
+        col_esq, col_dir = st.columns(2)
+
+        # 2. HISTOGRAMA (Distribuição)
+        with col_esq:
+            st.subheader("2. Distribuição do Saldo (Histograma)")
+            st.caption("Entenda a frequência dos posicionamentos. O mercado fica mais comprado ou vendido?")
+            
+            fig_hist = px.histogram(
+                df_ativo, 
+                x="Saldo_Liquido", 
+                nbins=20, 
+                title="Distribuição de Frequência",
+                color_discrete_sequence=['#00CC96']
+            )
+            # Adiciona linha de média vertical
+            media_saldo = df_ativo['Saldo_Liquido'].mean()
+            fig_hist.add_vline(x=media_saldo, line_dash="dash", line_color="white", annotation_text="Média")
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+        # 3. SCATTER PLOT (Correlação X vs Y)
+        with col_dir:
+            st.subheader("3. Correlação: Comprados vs Vendidos")
+            st.caption("Existe relação entre o aumento de longs e shorts? (Dispersão)")
+            
+            # CRIAMOS UMA COLUNA TEMPORÁRIA COM VALOR ABSOLUTO PARA O TAMANHO
+            df_ativo['Tamanho_Absoluto'] = df_ativo['Saldo_Liquido'].abs()
+
+            fig_scatter = px.scatter(
+                df_ativo, 
+                x="Comprados", 
+                y="Vendidos", 
+                color="Sentimento",
+                size="Tamanho_Absoluto", # Usamos o valor absoluto aqui (sempre positivo)
+                hover_data=['data_referencia', 'Saldo_Liquido'], # Mostramos o saldo real no mouse
+                title=f"Dispersão (Relação X vs Y)"
+            )
+            st.plotly_chart(fig_scatter, use_container_width=True)
