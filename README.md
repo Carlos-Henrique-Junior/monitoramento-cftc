@@ -31,13 +31,11 @@ O projeto segue o fluxo:
 
 ```mermaid
 graph LR
-    A[🌎 Fonte: CFTC.gov] -->|Extração & Tratamento (Python)| B(⚙️ ETL Pipeline)
-    B -->|Persistência| C[(🗄️ SQL Server / Docker)]
-    C -->|Consulta| D{🔌 API FastAPI}
-    D -->|Consumo| E[📊 Dashboard Streamlit]
-    C -->|Consumo| F[📈 Power BI / Excel]
-```
-
+    A["🌎 Fonte: CFTC.gov"] -->|"Extração & Tratamento (Python)"| B("⚙️ ETL Pipeline")
+    B -->|Persistência| C[("🗄️ SQL Server / Docker")]
+    C -->|Consulta| D{"🔌 API FastAPI"}
+    D -->|Consumo| E["📊 Dashboard Streamlit"]
+    C -->|Consumo| F["📈 Power BI / Excel"]
 ---
 
 # 🚀 Funcionalidades
