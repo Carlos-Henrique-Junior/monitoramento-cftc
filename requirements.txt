@@ -7,3 +7,4 @@ pyodbc
 fastapi
 uvicorn
 matplotlib
+python-dotenv
