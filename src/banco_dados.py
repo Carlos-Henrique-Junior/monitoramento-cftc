@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 import urllib.parse # Importante para corrigir a senha
 
 # --- CONFIGURAÇÕES ---
-SERVER = 'localhost'
+SERVER = '127.0.0.1'
 PORT = '1433'
 DATABASE = 'MercadoFinanceiro'
 USER = 'sa'
