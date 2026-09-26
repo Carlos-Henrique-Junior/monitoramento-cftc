@@ -1,50 +1,47 @@
+"""Persistência opcional do dataset em SQL Server via ambiente."""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from urllib.parse import quote_plus
+
 import pandas as pd
 from sqlalchemy import create_engine
-import urllib.parse # Importante para corrigir a senha
 
-# --- CONFIGURAÇÕES ---
-SERVER = '127.0.0.1'
-PORT = '1433'
-DATABASE = 'MercadoFinanceiro'
-USER = 'sa'
-PASSWORD_RAW = 'Dados@2026Strong' # Sua senha original com @
-DRIVER = 'ODBC Driver 17 for SQL Server'
+DEFAULT_DATA_PATH = Path(__file__).resolve().parents[1] / "dados_dashboard.csv"
 
-def salvar_no_sql_server():
-    print(f"🔌 Conectando ao SQL Server (Docker)...")
-    
-    try:
-        # 1. TRATAMENTO DA SENHA (O Pulo do Gato 🐱)
-        # Transforma 'Dados@2026Strong' em 'Dados%402026Strong' para não quebrar a conexão
-        password_encoded = urllib.parse.quote_plus(PASSWORD_RAW)
-        
-        # 2. Monta a string de conexão correta
-        connection_string = (
-            f"mssql+pyodbc://{USER}:{password_encoded}@{SERVER}:{PORT}/{DATABASE}"
-            f"?driver={urllib.parse.quote_plus(DRIVER)}"
-            f"&TrustServerCertificate=yes"
+
+def salvar_no_sql_server(data_path: Path = DEFAULT_DATA_PATH) -> None:
+    """Substitui a tabela de destino com o dataset validado."""
+    required = ["MSSQL_SERVER", "MSSQL_DATABASE", "MSSQL_USER", "MSSQL_PASSWORD"]
+    missing = [name for name in required if not os.getenv(name)]
+    if missing:
+        raise RuntimeError(
+            "Configuração ausente: " + ", ".join(missing)
+            + ". Configure o ambiente antes de executar."
         )
-        
-        # Cria a engine
-        engine = create_engine(connection_string)
 
-        # 3. Lê e Salva
-        print("📂 Lendo dados_dashboard.csv...")
-        df = pd.read_csv('dados_dashboard.csv')
-        
-        df['data_referencia'] = pd.to_datetime(df['data_referencia'])
-        
-        print(f"💾 Salvando {len(df)} registros na tabela 'TB_COT_REPORT'...")
-        df.to_sql(name='TB_COT_REPORT', con=engine, if_exists='replace', index=False)
-        
-        print("✅ Sucesso! Dados salvos no SQL Server local.")
-        
-    except Exception as e:
-        print(f"❌ Erro: {e}")
-        print("-" * 50)
-        print("Dicas de Resolução:")
-        print("1. O Docker está rodando? (comando: docker ps)")
-        print("2. O banco 'MercadoFinanceiro' existe? (Crie no DBeaver)")
+    driver = os.getenv("MSSQL_DRIVER", "ODBC Driver 17 for SQL Server")
+    port = os.getenv("MSSQL_PORT", "1433")
+    trust_certificate = os.getenv("MSSQL_TRUST_SERVER_CERTIFICATE", "yes")
+    connection_string = (
+        f"mssql+pyodbc://{quote_plus(os.environ['MSSQL_USER'])}:"
+        f"{quote_plus(os.environ['MSSQL_PASSWORD'])}@"
+        f"{os.environ['MSSQL_SERVER']}:{port}/{os.environ['MSSQL_DATABASE']}"
+        f"?driver={quote_plus(driver)}"
+        f"&TrustServerCertificate={trust_certificate}"
+    )
+
+    path = Path(data_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Dataset não encontrado: {path}")
+    df = pd.read_csv(path)
+    df["data_referencia"] = pd.to_datetime(df["data_referencia"], errors="raise")
+    engine = create_engine(connection_string)
+    df.to_sql(name="TB_COT_REPORT", con=engine, if_exists="replace", index=False)
+    print(f"Carga concluída: {len(df)} registros em TB_COT_REPORT")
+
 
 if __name__ == "__main__":
     salvar_no_sql_server()
