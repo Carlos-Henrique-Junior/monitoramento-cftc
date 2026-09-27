@@ -1,5 +1,13 @@
-﻿venv/
+﻿# Ambientes virtuais
+venv/
+.venv/
+
+# Python
 __pycache__/
 *.pyc
+
+# Testes
+.pytest_cache/
+
+# Segredos
 .env
-dados_dashboard.csv

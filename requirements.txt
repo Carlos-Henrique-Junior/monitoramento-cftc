@@ -8,3 +8,6 @@ fastapi
 uvicorn
 matplotlib
 python-dotenv
+
+# Testes
+pytest

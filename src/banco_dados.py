@@ -39,7 +39,10 @@ def salvar_no_sql_server(data_path: Path = DEFAULT_DATA_PATH) -> None:
     df = pd.read_csv(path)
     df["data_referencia"] = pd.to_datetime(df["data_referencia"], errors="raise")
     engine = create_engine(connection_string)
-    df.to_sql(name="TB_COT_REPORT", con=engine, if_exists="replace", index=False)
+    try:
+        df.to_sql(name="TB_COT_REPORT", con=engine, if_exists="replace", index=False)
+    finally:
+        engine.dispose()
     print(f"Carga concluída: {len(df)} registros em TB_COT_REPORT")
 
 

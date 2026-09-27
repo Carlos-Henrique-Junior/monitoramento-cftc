@@ -1,5 +1,5 @@
 @echo off
-cd /d "D:\Projetos\Projeto_CFTC"
+cd /d "%~dp0"
 call .venv\Scripts\activate
 
 echo 1. Baixando e Tratando Dados (ETL)...

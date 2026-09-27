@@ -136,7 +136,7 @@ setores = ["TODOS"] + sorted(df_raw["Setor"].unique())
 setor_sel = st.sidebar.selectbox("Setor", setores)
 
 if setor_sel != "TODOS":
-    df = df_raw[df_raw["Setor"] == setor_sel]
+    df = df_raw[df_raw["Setor"] == setor_sel].copy()
 else:
     df = df_raw.copy()
 
@@ -145,17 +145,21 @@ ativos = ["TODOS"] + sorted(df["Ativo_Amigavel"].unique())
 ativo_sel = st.sidebar.selectbox("Ativo", ativos)
 
 if ativo_sel != "TODOS":
-    df = df[df["Ativo_Amigavel"] == ativo_sel]
+    df = df[df["Ativo_Amigavel"] == ativo_sel].copy()
+
+if df.empty:
+    st.warning("⚠️ Sem dados para os filtros selecionados.")
+    st.stop()
 
 # Filtro 3: Data
 d_min, d_max = df["data_referencia"].min(), df["data_referencia"].max()
 datas = st.sidebar.date_input("Período", [d_min, d_max])
 
 if len(datas) == 2:
-    df = df[(df["data_referencia"] >= pd.to_datetime(datas[0])) & (df["data_referencia"] <= pd.to_datetime(datas[1]))]
+    df = df[(df["data_referencia"] >= pd.to_datetime(datas[0])) & (df["data_referencia"] <= pd.to_datetime(datas[1]))].copy()
 
 if df.empty:
-    st.warning("⚠️ Sem dados para os filtros selecionados.")
+    st.warning("⚠️ Sem dados para o período selecionado.")
     st.stop()
 
 # ===============================
@@ -257,10 +261,14 @@ elif pagina == "📈 Visão Micro (Ativo)":
 
     # Gráfico de Sazonalidade
     st.subheader("Padrão de Sazonalidade (Média Mensal)")
-    df_ativo["Mês"] = df_ativo["data_referencia"].dt.month
-    sazonal = df_ativo.groupby("Mês")["Saldo_Liquido"].mean().reset_index()
-    
-    fig_saz = px.bar(sazonal, x="Mês", y="Saldo_Liquido", 
+    sazonal = (
+        df_ativo.assign(Mes=df_ativo["data_referencia"].dt.month)
+        .groupby("Mes")["Saldo_Liquido"]
+        .mean()
+        .reset_index()
+    )
+
+    fig_saz = px.bar(sazonal, x="Mes", y="Saldo_Liquido",
                      color="Saldo_Liquido", color_continuous_scale=['red', 'gray', 'green'])
     fig_saz.update_layout(xaxis=dict(tickmode='linear', tick0=1, dtick=1))
     st.plotly_chart(fig_saz, use_container_width=True)
@@ -280,9 +288,9 @@ elif pagina == "🧪 Laboratório Quant":
         
     with c2:
         st.subheader("Quem está onde? (Scatter)")
-        df["Tamanho"] = df["Saldo_Liquido"].abs()
+        df_plot = df.assign(Tamanho=df["Saldo_Liquido"].abs())
         fig = px.scatter(
-            df, x="Comprados", y="Vendidos", 
+            df_plot, x="Comprados", y="Vendidos",
             color="Setor", size="Tamanho", 
             hover_name="Ativo_Amigavel", 
             color_discrete_map=CORES_SETOR,

@@ -1,6 +1,11 @@
-from fastapi import FastAPI, HTTPException
+"""API REST para consulta dos dados de posicionamento COT (CFTC)."""
+
+from pathlib import Path
+
 import pandas as pd
-import os
+from fastapi import FastAPI, HTTPException
+
+DATA_PATH = Path(__file__).resolve().parents[1] / "dados_dashboard.csv"
 
 app = FastAPI(
     title="API COT Report",
@@ -9,9 +14,9 @@ app = FastAPI(
 )
 
 # Carrega os dados na memória ao iniciar
-def get_data():
-    if os.path.exists('dados_dashboard.csv'):
-        return pd.read_csv('dados_dashboard.csv')
+def get_data() -> pd.DataFrame:
+    if DATA_PATH.exists():
+        return pd.read_csv(DATA_PATH)
     return pd.DataFrame()
 
 @app.get("/")
@@ -30,12 +35,12 @@ def listar_ativos():
 def pegar_dados_ativo(ativo: str):
     """Retorna o histórico completo de um ativo específico."""
     df = get_data()
-    # Filtra pelo nome (contém o texto, case insensitive)
-    df_filtrado = df[df['nome_ativo'].str.contains(ativo, case=False, na=False)]
-    
+    # Filtra pelo nome (contém o texto literal, case insensitive)
+    df_filtrado = df[df['nome_ativo'].str.contains(ativo, case=False, na=False, regex=False)]
+
     if df_filtrado.empty:
         raise HTTPException(status_code=404, detail=f"Ativo '{ativo}' não encontrado")
-    
+
     # Converte para dicionário (JSON)
     return df_filtrado.to_dict(orient="records")
 
