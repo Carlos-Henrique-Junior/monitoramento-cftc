@@ -54,7 +54,9 @@ Net Position = Long - Short
 ```
 
 ### 🔹 Persistência
-Armazenamento em SQL Server via Docker.
+Armazenamento em SQL Server via Docker. A carga usa `(data_referencia, nome_ativo)` como chave lógica, rejeita chaves duplicadas no CSV e atualiza transacionalmente apenas o intervalo de datas recebido, preservando períodos históricos fora dele. Reprocessar o mesmo snapshot é idempotente.
+
+O ETL padrão aponta para o arquivo CFTC de 2026. Para importar outro arquivo anual, configure `CFTC_SOURCE_URL` com a URL do ZIP antes de executar `src/etl_pipeline.py`; o ETL não baixa automaticamente todos os anos.
 
 ---
 
