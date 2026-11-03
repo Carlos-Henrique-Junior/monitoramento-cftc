@@ -1,10 +1,11 @@
-﻿streamlit
+streamlit
 pandas
 plotly
 requests
 sqlalchemy
 pyodbc
 fastapi
+pydantic-settings
 uvicorn
 matplotlib
 python-dotenv

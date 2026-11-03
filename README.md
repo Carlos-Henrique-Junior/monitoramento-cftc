@@ -75,9 +75,17 @@ O ETL padrão aponta para o arquivo CFTC de 2026. Para importar outro arquivo an
 
 ## 3️⃣ API Backend (FastAPI)
 
-- Endpoints REST  
-- Documentação automática (Swagger UI)  
-- Integração com outros sistemas  
+API de consulta somente leitura sobre o CSV gerado pelo ETL. A camada HTTP fica em `cftc_api/` (settings, schemas, routers e app factory); `src/api.py` é mantido como entrypoint compatível.
+
+- `GET /` — status e link do Swagger
+- `GET /health` — health check com o total de registros carregados
+- `GET /ativos` — lista de ativos disponíveis
+- `GET /dados/{ativo}?limit=100&offset=0` — histórico do ativo com paginação (máximo de 1000) e headers `X-Total-Count`, `X-Limit` e `X-Offset`
+- Documentação automática em `/docs`
+
+Rodar com `uvicorn src.api:app --reload` ou `uvicorn cftc_api.app:app --reload`. Testes da API: `pytest tests/test_api.py`.
+
+A API não usa PostgreSQL nem JWT: a fonte é o CSV exportado pelo ETL e a consulta é pública e somente leitura. Migrar para banco e autenticação mudaria a arquitetura do projeto, então essa parte do padrão FastAPI não se aplica aqui.
 
 ---
 
@@ -115,7 +123,7 @@ pip install -r requirements.txt
 
 ```bash
 docker run -e "ACCEPT_EULA=Y" \
--e "MSSQL_SA_PASSWORD=SuaSenhaForte!123" \
+-e "MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your local environment}" \
 -p 1433:1433 \
 -d mcr.microsoft.com/mssql/server:2022-latest
 ```
@@ -149,6 +157,10 @@ Documentação da API:
 http://127.0.0.1:8000/docs
 ```
 
+## EasyPanel dashboard container
+
+The repository Dockerfile runs only the Streamlit dashboard on port `8501`, reading the checked-in `dados_dashboard.csv` snapshot. The SQL Server persistence/ETL and FastAPI endpoints are not started by this container; they require separate services and configuration. The dashboard snapshot is sourced from the public CFTC COT report.
+
 ---
 
 # 📊 Estrutura do Projeto
@@ -160,8 +172,20 @@ http://127.0.0.1:8000/docs
  ┃ ┣ 📜 dashboard.py
  ┃ ┣ 📜 banco_dados.py
  ┃ ┗ 📜 api.py
+ ┣ 📂 cftc_api
+ ┃ ┣ 📜 app.py
+ ┃ ┣ 📜 settings.py
+ ┃ ┣ 📜 data.py
+ ┃ ┣ 📜 schemas.py
+ ┃ ┗ 📂 routers
+ ┃   ┗ 📜 cot.py
+ ┣ 📂 tests
+ ┃ ┣ 📜 test_api.py
+ ┃ ┣ 📜 test_etl.py
+ ┃ ┗ 📜 test_banco_dados.py
  ┣ 📜 dados_dashboard.csv
  ┣ 📜 requirements.txt
+ ┣ 📜 requirements-dev.txt
  ┗ 📜 README.md
 ```
 
